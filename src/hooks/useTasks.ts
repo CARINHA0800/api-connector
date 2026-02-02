@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { getUserFriendlyError, logError } from "@/lib/errorHandler";
 
 export type Task = {
   id: string;
@@ -29,7 +30,8 @@ export const useTasks = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        throw new Error(error.message);
+        logError("useTasks", error);
+        throw new Error(getUserFriendlyError(error));
       }
 
       return data as Task[];
@@ -62,7 +64,8 @@ export const useCreateTask = () => {
         .single();
 
       if (error) {
-        throw new Error(error.message);
+        logError("useCreateTask", error);
+        throw new Error(getUserFriendlyError(error));
       }
 
       return data as Task;
@@ -98,13 +101,21 @@ export const useUpdateTaskStatus = () => {
         .single();
 
       if (error) {
-        throw new Error(error.message);
+        logError("useUpdateTaskStatus", error);
+        throw new Error(getUserFriendlyError(error));
       }
 
       return data as Task;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar tarefa",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 };
@@ -121,7 +132,8 @@ export const useDeleteTask = () => {
         .eq("id", id);
 
       if (error) {
-        throw new Error(error.message);
+        logError("useDeleteTask", error);
+        throw new Error(getUserFriendlyError(error));
       }
     },
     onSuccess: () => {
@@ -129,6 +141,13 @@ export const useDeleteTask = () => {
       toast({
         title: "Tarefa removida",
         description: "A tarefa foi excluída com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao remover tarefa",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });
