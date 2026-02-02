@@ -16,7 +16,7 @@ export const TaskList = () => {
   if (error) {
     return (
       <div className="glass rounded-xl p-8 text-center">
-        <p className="text-destructive">Erro ao carregar tarefas: {error.message}</p>
+        <p className="text-destructive">{error.message}</p>
       </div>
     );
   }
