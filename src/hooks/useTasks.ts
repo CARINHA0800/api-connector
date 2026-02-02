@@ -7,6 +7,7 @@ export type Task = {
   title: string;
   description: string | null;
   status: "pending" | "in_progress" | "completed";
+  user_id: string;
   created_at: string;
   updated_at: string;
 };
@@ -17,7 +18,7 @@ export type CreateTaskInput = {
   status?: "pending" | "in_progress" | "completed";
 };
 
-// GET - Fetch all tasks
+// GET - Fetch all tasks for the current user
 export const useTasks = () => {
   return useQuery({
     queryKey: ["tasks"],
@@ -36,18 +37,26 @@ export const useTasks = () => {
   });
 };
 
-// POST - Create a new task
+// POST - Create a new task with user_id
 export const useCreateTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (input: CreateTaskInput): Promise<Task> => {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
+
       const { data, error } = await supabase
         .from("tasks")
         .insert([{
           title: input.title,
           description: input.description || null,
           status: input.status || "pending",
+          user_id: user.id,
         }])
         .select()
         .single();
